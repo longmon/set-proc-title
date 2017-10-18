@@ -14,21 +14,10 @@ void cli_set_proc_title_init(int argc, char **argv, char **envp);
 void cli_set_proc_title( const char *fmt, ...);
 
 int main( int argc, char *argv[] ){
-    char *os_argv_last;
-    char *p;
-    size_t  size;
-    size = 0;
-    int i;
-    for( i = 0; environ[i]; i++ ){
-        size += strlen(environ[i])+1;
-    }
-    p = calloc(sizeof(char), size);
-    os_argv_last = argv[0];
-    for( i = 0; argv[i]; i++ ){
-        if( os_argv_last == argv[i] ){
-            os_argv_last = argv[i]+strlen(argv[i])+1;
-        }
-    }
+    cli_set_proc_title_init(argc,argv,environ);
+    cli_set_proc_title("title:%s asddd\n", "aaaaaa");
+    printf("os_main_argv:%p\n", os_main_argv);
+    printf("os_main_argv_end:%p\n", os_main_argv_end);
 }
 
 void cli_set_proc_title( const char *fmt, ...) {
@@ -38,20 +27,21 @@ void cli_set_proc_title( const char *fmt, ...) {
     va_start(vp, fmt);
     vsprintf(p, fmt, vp);
     va_end(vp);
-    printf(p);
+
 }
 
 void cli_set_proc_title_init(int argc, char *argv[], char **envp) {
     int i;
     for( i = 0; envp[i]; i++ ) continue;
     if( i > 0 ) {
-        os_main_argv_end = envp[i-1]+strlen(envp[i])+1;
+        os_main_argv_end = envp[i-1]+strlen(envp[i-1])+1;
     } else {
-        os_main_argv_env = argv[argc-1]+strlen(argv[argc-1])+1;
+        os_main_argv_end = argv[argc-1]+strlen(argv[argc-1])+1;
     }
-    environ = (char**)calloc( sizeof(char*), sizeof(char*) *(i+1) );
     for( i = 0; envp[i]; i++ ){
-        environ[i] = strdup(envp[i]);
+        environ[i] = (char **)calloc( sizeof(char), strlen(envp[i])*sizeof(char));
+        strcpy(environ[i], envp[i]);
     }
     environ[i] = NULL;
+    os_main_argv = argv;
 }
